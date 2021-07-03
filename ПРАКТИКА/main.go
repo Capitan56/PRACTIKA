@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,11 +9,14 @@ import (
 )
 
 type Config struct {
-	Server struct {
-		Server_ip   string `json:"server_ip"`
-		Server_port string `json:"server_port"`
-		Data_sorce  string `json:"data_sorce"`
-	}
+	Server_ip   string `json:"server_ip"`
+	Server_port string `json:"server_port"`
+	Data_sorce  string `json:"data_sorce"`
+}
+type Data_Json struct {
+	Id          int    `json:"id"`
+	Request     string `json:"request"`
+	Data_source string `json:"data_souce"`
 }
 
 func LoadConfiguration(filename string) (Config, error) {
@@ -31,18 +33,15 @@ func LoadConfiguration(filename string) (Config, error) {
 
 func main() {
 	handler := http.NewServeMux()
-	handler.HandleFunc("/SERVER", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("/handle_hook", func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Println("Starting the application...")
-		config, _ := LoadConfiguration("config.json")
-		fmt.Println(config.Server.Data_sorce)
 	})
 	s := &http.Server{
 		ReadHeaderTimeout: 30 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		Handler:           handler,
-		Addr:              ":8080",
+		Addr:              Config.Server_ip + ":" + Config.Server_port,
 	}
 
 	log.Fatal(s.ListenAndServe())
