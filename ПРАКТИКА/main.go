@@ -32,6 +32,11 @@ func LoadConfiguration(filename string) (Config, error) {
 }
 
 func main() {
+	config, err := LoadConfiguration("config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	handler := http.NewServeMux()
 	handler.HandleFunc("/handle_hook", func(w http.ResponseWriter, r *http.Request) {
 
@@ -41,7 +46,7 @@ func main() {
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		Handler:           handler,
-		Addr:              Config.Server_ip + ":" + Config.Server_port,
+		Addr:              config.Server_ip + ":" + config.Server_port,
 	}
 
 	log.Fatal(s.ListenAndServe())
