@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -31,7 +32,22 @@ func LoadConfiguration(filename string) (Config, error) {
 	return config, err
 }
 
+func test(rw http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(string(body))
+	var t Data_Json
+	err = json.Unmarshal(body, &t)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(t.Request)
+}
+
 func main() {
+
 	config, err := LoadConfiguration("config.json")
 	if err != nil {
 		log.Fatal(err)
@@ -52,3 +68,4 @@ func main() {
 	log.Fatal(s.ListenAndServe())
 
 }
+
