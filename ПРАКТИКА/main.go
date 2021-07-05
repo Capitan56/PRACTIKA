@@ -15,7 +15,7 @@ type Config struct {
 	Data_sorce  string `json:"data_sorce"`
 }
 type Data_Json struct {
-	Id          int    `json:"id"`
+	Id          string `json:"id"`
 	Request     string `json:"request"`
 	Data_source string `json:"data_souce"`
 }
@@ -54,9 +54,7 @@ func main() {
 	}
 
 	handler := http.NewServeMux()
-	handler.HandleFunc("/handle_hook", func(w http.ResponseWriter, r *http.Request) {
-
-	})
+	handler.HandleFunc("/handle_hook", test)
 	s := &http.Server{
 		ReadHeaderTimeout: 30 * time.Second,
 		ReadTimeout:       30 * time.Second,
