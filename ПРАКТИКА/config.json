@@ -1,6 +1,5 @@
 {
     "server_ip": "127.0.0.1",
     "server_port": "8080",
-    "data_sorce": "12ad32sd34"
+    "datasource": "12ad32sd34"
 }
-
