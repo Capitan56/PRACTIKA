@@ -7,17 +7,14 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/Capitan56/processorback"
 )
 
 type Config struct {
-	Server_ip   string `json:"server_ip"`
-	Server_port string `json:"server_port"`
-	Data_sorce  string `json:"data_sorce"`
-}
-type Data_Json struct {
-	Id          string `json:"id"`
-	Request     string `json:"request"`
-	Data_source string `json:"data_souce"`
+	ServerIp   string `json:"server_ip"`
+	ServerPort string `json:"server_port"`
+	DataSource string `json:"datasource"`
 }
 
 func LoadConfiguration(filename string) (Config, error) {
@@ -38,7 +35,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	log.Println(string(body))
-	var t Data_Json
+	var t processorback.DataJson
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		panic(err)
@@ -54,16 +51,18 @@ func main() {
 	}
 
 	handler := http.NewServeMux()
-	handler.HandleFunc("/handle_hook", test)
+	handler.HandleFunc("/handleHook", test)
+	handler.HandleFunc("/handleHook/Processoring", processorback.Processor)
+
 	s := &http.Server{
 		ReadHeaderTimeout: 30 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		Handler:           handler,
-		Addr:              config.Server_ip + ":" + config.Server_port,
+		Addr:              config.ServerIp + ":" + config.ServerPort,
 	}
-
 	log.Fatal(s.ListenAndServe())
 
 }
+
 
