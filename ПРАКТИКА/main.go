@@ -7,9 +7,13 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/Capitan56/processorback"
 )
+
+type DataJson struct {
+	Id         string `json:"id"`
+	Request    string `json:"request"`
+	DataSource string `json:"datasource"`
+}
 
 type Config struct {
 	ServerIp   string `json:"server_ip"`
@@ -35,7 +39,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	log.Println(string(body))
-	var t processorback.DataJson
+	var t DataJson
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		panic(err)
@@ -52,7 +56,6 @@ func main() {
 
 	handler := http.NewServeMux()
 	handler.HandleFunc("/handleHook", test)
-	handler.HandleFunc("/handleHook/Processoring", processorback.Processor)
 
 	s := &http.Server{
 		ReadHeaderTimeout: 30 * time.Second,
