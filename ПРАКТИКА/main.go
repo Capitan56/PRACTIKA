@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -45,6 +47,19 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	log.Println(t.Request)
+
+	bytesRepresentation, err := json.Marshal(t.Request)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(bytesRepresentation))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	io.Copy(rw, resp.Body)
+
 }
 
 func main() {
@@ -67,5 +82,3 @@ func main() {
 	log.Fatal(s.ListenAndServe())
 
 }
-
-
