@@ -40,6 +40,8 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
+		log.Println(err)
+
 	}
 	log.Println(string(body))
 	var t DataJson
@@ -47,6 +49,8 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
+		log.Println(err)
+
 	}
 	log.Println(t.Request)
 
@@ -54,6 +58,8 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
+		log.Println(err)
+
 	}
 
 	io.Copy(rw, resp.Body)
