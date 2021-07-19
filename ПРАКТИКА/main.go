@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 type DataJson struct {
@@ -26,10 +26,10 @@ type Config struct {
 func LoadConfiguration(filename string) (Config, error) {
 	var config Config
 	configFile, err := os.Open(filename)
-	defer configFile.Close()
 	if err != nil {
 		return config, err
 	}
+	defer configFile.Close()
 	jsonParser := json.NewDecoder(configFile)
 	err = jsonParser.Decode(&config)
 	return config, err
@@ -42,20 +42,17 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Println(string(body))
 	var t DataJson
+
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		panic(err)
 	}
 	log.Println(t.Request)
 
-	bytesRepresentation, err := json.Marshal(t.Request)
+	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(json.RawMessage(t.Request)))
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(bytesRepresentation))
-	if err != nil {
-		log.Fatalln(err)
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, err)
 	}
 
 	io.Copy(rw, resp.Body)
@@ -69,16 +66,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	handler := http.NewServeMux()
-	handler.HandleFunc("/handleHook", test)
-
-	s := &http.Server{
-		ReadHeaderTimeout: 30 * time.Second,
-		ReadTimeout:       30 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		Handler:           handler,
-		Addr:              config.ServerIp + ":" + config.ServerPort,
-	}
-	log.Fatal(s.ListenAndServe())
+	http.HandleFunc("/handleHook", test)
+	err = http.ListenAndServe(config.ServerIp+":"+config.ServerPort, nil)
+	log.Fatal(err)
 
 }
