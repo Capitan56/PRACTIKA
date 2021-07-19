@@ -13,7 +13,7 @@ import (
 
 type DataJson struct {
 	Id         string `json:"id"`
-	Request    string `json:"request"`
+	Request    json.RawMessage
 	DataSource string `json:"datasource"`
 }
 
@@ -38,18 +38,19 @@ func LoadConfiguration(filename string) (Config, error) {
 func test(rw http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		panic(err)
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, err)
 	}
 	log.Println(string(body))
 	var t DataJson
-
 	err = json.Unmarshal(body, &t)
 	if err != nil {
-		panic(err)
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, err)
 	}
 	log.Println(t.Request)
 
-	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(json.RawMessage(t.Request)))
+	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request))
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
@@ -71,3 +72,4 @@ func main() {
 	log.Fatal(err)
 
 }
+
