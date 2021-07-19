@@ -12,6 +12,8 @@ func Processor(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
+		log.Println(err)
+
 	}
 	fmt.Fprint(rw, len(body))
 }
