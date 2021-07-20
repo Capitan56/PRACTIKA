@@ -4,12 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
+
+var requests = map[string]int{}
+var result string
+
+type RequestTest struct {
+	NameRequest string
+	Variant     [][]byte
+}
 
 type DataJson struct {
 	Id         string `json:"id"`
@@ -41,7 +49,6 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
 		log.Println(err)
-
 	}
 	log.Println(string(body))
 	var t DataJson
@@ -50,19 +57,31 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
 		log.Println(err)
-
 	}
-	log.Println(t.Request)
+	result = string(t.Request)
+	log.Println(result)
 
 	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request))
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
 		log.Println(err)
-
 	}
 
-	io.Copy(rw, resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
+	b := string(body)
+	data, err := strconv.Atoi(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if requests[result] != 0 {
+		fmt.Fprint(rw, requests[result])
+	} else if requests[result] == 0 {
+		requests[result] = data
+		fmt.Fprint(rw, requests[result])
+
+	}
 
 }
 
@@ -78,4 +97,3 @@ func main() {
 	log.Fatal(err)
 
 }
-
