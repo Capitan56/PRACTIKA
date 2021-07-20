@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 func Processor(rw http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
+	_, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
 		log.Println(err)
-
 	}
-	fmt.Fprint(rw, len(body))
+
+	seconds := time.Now().Unix()
+	rand.Seed(seconds)
+	fmt.Fprint(rw, rand.Intn(100)+1)
 }
 
 func main() {
