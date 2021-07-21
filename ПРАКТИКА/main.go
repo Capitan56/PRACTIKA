@@ -12,9 +12,13 @@ import (
 
 var requests = map[string][]byte{}
 
+type MapDelete struct {
+	IdReq string `json:"id_request"`
+}
+
 type DataJson struct {
 	Id         string `json:"id"`
-	Request    json.RawMessage
+	Request    string `json:"request"`
 	DataSource string `json:"datasource"`
 }
 
@@ -53,15 +57,16 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Println(string(t.Request))
+	log.Println(t.Request)
 
-	var idRequest = t.Id + string(t.Request)
+	var idRequest = t.Id + t.Request
+	log.Println(idRequest)
 
 	if value, ok := requests[idRequest]; ok == true {
 
 		fmt.Fprint(rw, value)
 
-	} else if resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request)); err != nil {
+	} else if resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(json.RawMessage(t.Request))); err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(rw, err)
 		log.Println(err)
@@ -75,6 +80,32 @@ func test(rw http.ResponseWriter, req *http.Request) {
 
 }
 
+func deleteMap(rw http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, err)
+		log.Println(err)
+		return
+	}
+	log.Println(string(body))
+	var d MapDelete
+	err = json.Unmarshal(body, &d)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, err)
+		log.Println(err)
+		return
+	}
+
+	if _, ok := requests[d.IdReq]; ok == true {
+		delete(requests, d.IdReq)
+
+	} else {
+		fmt.Fprint(rw, "В карте отсутствует такой ключ-значение")
+	}
+}
+
 func main() {
 
 	config, err := LoadConfiguration("config.json")
@@ -83,6 +114,7 @@ func main() {
 	}
 
 	http.HandleFunc("/handleHook", test)
+	http.HandleFunc("/handleHook/delete_cached", deleteMap)
 	err = http.ListenAndServe(config.ServerIp+":"+config.ServerPort, nil)
 	log.Fatal(err)
 }
