@@ -55,7 +55,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Println(string(t.Request))
 
-	if value, ok := requests[string(t.Request)]; ok == true {
+	if value, ok := requests[t.Id+string(t.Request)]; ok == true {
 
 		fmt.Fprint(rw, value)
 
@@ -63,12 +63,11 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(rw, err)
 		log.Println(err)
-		return
 
 	} else {
 
 		body, err = ioutil.ReadAll(resp.Body)
-		requests[string(t.Request)] = body
+		requests[t.Id+string(t.Request)] = body
 		fmt.Fprint(rw, body)
 	}
 
@@ -85,4 +84,3 @@ func main() {
 	err = http.ListenAndServe(config.ServerIp+":"+config.ServerPort, nil)
 	log.Fatal(err)
 }
-
