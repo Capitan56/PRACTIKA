@@ -8,16 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 )
 
-var requests = map[string]int{}
-var result string
-
-type RequestTest struct {
-	NameRequest string
-	Variant     [][]byte
-}
+var requests = map[string][]byte{}
 
 type DataJson struct {
 	Id         string `json:"id"`
@@ -49,6 +42,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
 		log.Println(err)
+		return
 	}
 	log.Println(string(body))
 	var t DataJson
@@ -57,30 +51,29 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, err)
 		log.Println(err)
+		return
 	}
-	result = string(t.Request)
-	log.Println(result)
+	log.Println(string(t.Request))
 
-	resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request))
-	if err != nil {
-		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(rw, err)
-		log.Println(err)
-	}
+	_, ok := requests[string(t.Request)]
 
-	body, err = ioutil.ReadAll(resp.Body)
-	b := string(body)
-	data, err := strconv.Atoi(b)
-	if err != nil {
-		log.Fatal(err)
-	}
+	if ok == true {
 
-	if requests[result] != 0 {
-		fmt.Fprint(rw, requests[result])
-	} else if requests[result] == 0 {
-		requests[result] = data
-		fmt.Fprint(rw, requests[result])
+		fmt.Fprint(rw, requests[string(t.Request)])
 
+	} else if ok == false {
+
+		resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request))
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(rw, err)
+			log.Println(err)
+			return
+		}
+
+		body, err = ioutil.ReadAll(resp.Body)
+		requests[string(t.Request)] = body
+		fmt.Fprint(rw, requests[string(t.Request)])
 	}
 
 }
@@ -89,11 +82,13 @@ func main() {
 
 	config, err := LoadConfiguration("config.json")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	http.HandleFunc("/handleHook", test)
 	err = http.ListenAndServe(config.ServerIp+":"+config.ServerPort, nil)
-	log.Fatal(err)
+	log.Println(err)
+	return
 
 }
