@@ -55,25 +55,21 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Println(string(t.Request))
 
-	_, ok := requests[string(t.Request)]
+	if value, ok := requests[string(t.Request)]; ok == true {
 
-	if ok == true {
+		fmt.Fprint(rw, value)
 
-		fmt.Fprint(rw, requests[string(t.Request)])
+	} else if resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request)); err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(rw, err)
+		log.Println(err)
+		return
 
-	} else if ok == false {
-
-		resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request))
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(rw, err)
-			log.Println(err)
-			return
-		}
+	} else {
 
 		body, err = ioutil.ReadAll(resp.Body)
 		requests[string(t.Request)] = body
-		fmt.Fprint(rw, requests[string(t.Request)])
+		fmt.Fprint(rw, body)
 	}
 
 }
@@ -82,13 +78,11 @@ func main() {
 
 	config, err := LoadConfiguration("config.json")
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	http.HandleFunc("/handleHook", test)
 	err = http.ListenAndServe(config.ServerIp+":"+config.ServerPort, nil)
-	log.Println(err)
-	return
-
+	log.Fatal(err)
 }
+
