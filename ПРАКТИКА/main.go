@@ -12,7 +12,6 @@ import (
 
 var requests = map[string][]byte{}
 var Req string
-var idRequest string
 
 type MapDelete struct {
 	Id json.RawMessage
@@ -61,7 +60,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Println(string(t.Request))
 
-	idRequest = t.Id + string(t.Request)
+	var idRequest = t.Id + string(t.Request)
 
 	if value, ok := requests[idRequest]; ok == true {
 
