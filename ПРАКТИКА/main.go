@@ -11,14 +11,16 @@ import (
 )
 
 var requests = map[string][]byte{}
+var Req string
+var idRequest string
 
 type MapDelete struct {
-	IdReq string `json:"id_request"`
+	Id json.RawMessage
 }
 
 type DataJson struct {
 	Id         string `json:"id"`
-	Request    string `json:"request"`
+	Request    json.RawMessage
 	DataSource string `json:"datasource"`
 }
 
@@ -57,16 +59,15 @@ func test(rw http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Println(t.Request)
+	log.Println(string(t.Request))
 
-	var idRequest = t.Id + t.Request
-	log.Println(idRequest)
+	idRequest = t.Id + string(t.Request)
 
 	if value, ok := requests[idRequest]; ok == true {
 
 		fmt.Fprint(rw, value)
 
-	} else if resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(json.RawMessage(t.Request))); err != nil {
+	} else if resp, err := http.Post("http://127.0.0.1:3000/handleHook/Processoring", "application/json", bytes.NewBuffer(t.Request)); err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(rw, err)
 		log.Println(err)
@@ -98,11 +99,10 @@ func deleteMap(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if _, ok := requests[d.IdReq]; ok == true {
-		delete(requests, d.IdReq)
-
-	} else {
-		fmt.Fprint(rw, "В карте отсутствует такой ключ-значение")
+	for key := range requests {
+		if string([]rune(string(d.Id))[1]) == string([]rune(key)[0]) {
+			delete(requests, key)
+		}
 	}
 }
 
