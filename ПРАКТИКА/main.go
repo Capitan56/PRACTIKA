@@ -55,7 +55,9 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Println(string(t.Request))
 
-	if value, ok := requests[t.Id+string(t.Request)]; ok == true {
+	var idRequest = t.Id + string(t.Request)
+
+	if value, ok := requests[idRequest]; ok == true {
 
 		fmt.Fprint(rw, value)
 
@@ -67,7 +69,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	} else {
 
 		body, err = ioutil.ReadAll(resp.Body)
-		requests[t.Id+string(t.Request)] = body
+		requests[idRequest] = body
 		fmt.Fprint(rw, body)
 	}
 
