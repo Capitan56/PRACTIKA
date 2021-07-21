@@ -11,7 +11,6 @@ import (
 )
 
 var requests = map[string][]byte{}
-var Req string
 
 type MapDelete struct {
 	Id json.RawMessage
