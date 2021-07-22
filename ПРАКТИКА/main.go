@@ -8,12 +8,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var requests = map[string][]byte{}
 
 type MapDelete struct {
-	Id json.RawMessage
+	Id string `json:"Id"`
 }
 
 type DataJson struct {
@@ -98,7 +99,7 @@ func deleteMap(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	for key := range requests {
-		if string([]rune(string(d.Id))[1]) == string([]rune(key)[0]) {
+		if strings.HasPrefix(key, d.Id) == true {
 			delete(requests, key)
 		}
 	}
