@@ -56,10 +56,14 @@ func insertCached(c *Cache, keyMap string, valueMap []byte) {
 	c.requests[keyMap] = valueMap
 }
 
-func deleteCached(c *Cache, Id string) {
+func deleteCached(c *Cache, id string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	delete(c.requests, Id)
+	for key := range requestsMap.requests {
+		if strings.HasPrefix(key, id) == true {
+			delete(c.requests, key)
+		}
+	}
 }
 
 func test(rw http.ResponseWriter, req *http.Request) {
@@ -118,12 +122,8 @@ func deleteMap(rw http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
+	deleteCached(&requestsMap, d.Id)
 
-	for key := range requestsMap.requests {
-		if strings.HasPrefix(key, d.Id) == true {
-			deleteCached(&requestsMap, key)
-		}
-	}
 }
 
 func main() {
