@@ -9,9 +9,18 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 )
 
-var requests = map[string][]byte{}
+type Cache struct {
+	requests map[string][]byte
+	mux      sync.Mutex
+}
+
+var requestsMap = Cache{
+	requests: map[string][]byte{},
+	mux:      sync.Mutex{},
+}
 
 type MapDelete struct {
 	Id string `json:"Id"`
@@ -41,6 +50,18 @@ func LoadConfiguration(filename string) (Config, error) {
 	return config, err
 }
 
+func insertCached(c *Cache, keyMap string, valueMap []byte) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.requests[keyMap] = valueMap
+}
+
+func deleteCached(c *Cache, Id string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	delete(c.requests, Id)
+}
+
 func test(rw http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -62,7 +83,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 
 	var idRequest = t.Id + string(t.Request)
 
-	if value, ok := requests[idRequest]; ok == true {
+	if value, ok := requestsMap.requests[idRequest]; ok == true {
 
 		fmt.Fprint(rw, value)
 
@@ -74,7 +95,7 @@ func test(rw http.ResponseWriter, req *http.Request) {
 	} else {
 
 		body, err = ioutil.ReadAll(resp.Body)
-		requests[idRequest] = body
+		insertCached(&requestsMap, idRequest, body)
 		fmt.Fprint(rw, body)
 	}
 
@@ -98,9 +119,9 @@ func deleteMap(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	for key := range requests {
+	for key := range requestsMap.requests {
 		if strings.HasPrefix(key, d.Id) == true {
-			delete(requests, key)
+			deleteCached(&requestsMap, d.Id)
 		}
 	}
 }
