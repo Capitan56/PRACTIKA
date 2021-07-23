@@ -121,7 +121,7 @@ func deleteMap(rw http.ResponseWriter, req *http.Request) {
 
 	for key := range requestsMap.requests {
 		if strings.HasPrefix(key, d.Id) == true {
-			deleteCached(&requestsMap, d.Id)
+			deleteCached(&requestsMap, key)
 		}
 	}
 }
